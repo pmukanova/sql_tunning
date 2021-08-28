@@ -7,17 +7,20 @@ SET @v5 = 'Amber Hill';
 SET @v6 = 'MGT';
 SET @v7 = 'EE';			  
 SET @v8 = 'MAT';
- EXPLAIN ANALYZE
+EXPLAIN analyze
+-- drop index student_idx1 on Student;
 -- 2. List the names of students with id in the range of v2 (id) to v3 (inclusive).
--- SELECT name FROM Student WHERE id BETWEEN @v2 AND @v3;
-SELECT name FROM Student WHERE id in (@v2, @v3);
- 
- 
+SELECT name FROM Student WHERE id BETWEEN @v2 AND @v3;
+
+
 -- ---------------TUNING REPORT------------------------------
--- 1. Query was scanning whole table
+-- 1. Nothing to optimize in the query. The indexing method di not work
 -- 2. Running EXPLAIN ANALYZE showed:
--- > Filter: (student.id between <cache>((@v2)) and <cache>((@v3)))  (cost=41.00 rows=278) (actual time=0.082..0.318 rows=278 loops=1)
---    -> Table scan on Student  (cost=41.00 rows=400) (actual time=0.075..0.268 rows=400 loops=1)
--- 3. Used rewriting the query method:
--- AFTER swithing to IN clause instead of between querry is looking up only two rows
--- -> Index range scan on Student using student_idx1, with index condition: (student.id in (<cache>((@v2)),<cache>((@v3))))  (cost=1.41 rows=2) (actual time=0.036..0.039 rows=2 loops=1)\n'
+-- after creating index
+-- '-> Filter: (student.id between <cache>((@v2)) and <cache>((@v3)))  (cost=41.00 rows=278) (actual time=0.026..0.348 rows=278 loops=1)\n    -> Table scan on Student  (cost=41.00 rows=400) (actual time=0.015..0.283 rows=400 loops=1)\n'
+
+-- after dropping the index 
+-- '-> Filter: (student.id between <cache>((@v2)) and <cache>((@v3)))  (cost=5.44 rows=44) (actual time=0.034..0.255 rows=278 loops=1)\n    -> Table scan on Student  (cost=5.44 rows=400) (actual time=0.019..0.194 rows=400 loops=1)\n'
+
+
+
